@@ -7,7 +7,6 @@ void main() {
   final secondList = <int>[];
 
   // current location id - counter value
-  final firstCounter = <int, int>{};
   final secondCounter = <int, int>{};
 
   for (final line in inputData) {
@@ -19,11 +18,6 @@ void main() {
     firstList.add(firstValue);
     secondList.add(secondValue);
 
-    firstCounter.update(
-      firstValue,
-      (value) => value + 1,
-      ifAbsent: () => 1,
-    );
     secondCounter.update(
       secondValue,
       (value) => value + 1,
