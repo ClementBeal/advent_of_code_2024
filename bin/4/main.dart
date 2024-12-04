@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 
 const sequence = ["X", "M", "A", "S"];
+const shortSequence = ["M", "A", "S"];
 
 void main(List<String> args) {
   final input = File(r"inputs/4.txt")
@@ -11,15 +12,12 @@ void main(List<String> args) {
       .toList();
 
   print(countXMAS(input));
+  print(countXMAS2(input));
 }
 
 int countXMAS(List<List<String>> lines) {
   int xLength = lines[0].length;
   int yLength = lines.length;
-
-  final mask = [
-    for (int y = 0; y < yLength; y++) [for (int x = 0; x < xLength; x++) 0]
-  ];
 
   int total = 0;
 
@@ -35,15 +33,26 @@ int countXMAS(List<List<String>> lines) {
           (hasDiagonalBottomLeftTopRight(lines, x, y) ? 1 : 0);
 
       total += totalCombinaison;
-
-      mask[y][x] = totalCombinaison;
-      if (totalCombinaison == 0) {
-        lines[y][x] = ".";
-      }
     }
   }
 
   return total ~/ 4;
+}
+
+int countXMAS2(List<List<String>> lines) {
+  int xLength = lines[0].length;
+  int yLength = lines.length;
+
+  int total = 0;
+
+  for (int x = 1; x < xLength - 1; x++) {
+    for (int y = 1; y < yLength - 1; y++) {
+      bool isX = isOnBackslashDiag(lines, x, y) && isOnSlashDiag(lines, x, y);
+      total += (isX) ? 1 : 0;
+    }
+  }
+
+  return total;
 }
 
 bool isNextInSequence(String original, String next) {
@@ -147,4 +156,26 @@ bool hasDiagonalBottomRightTopLeft(List<List<String>> lines, int x, int y) {
   ];
 
   return ListEquality().equals(getSequence, sequence);
+}
+
+bool isOnBackslashDiag(List<List<String>> lines, int x, int y) {
+  String previousChar = getChar(lines, x - 1, y - 1);
+  String nextChar = getChar(lines, x + 1, y + 1);
+  final currentChar = getChar(lines, x, y);
+
+  return ListEquality()
+          .equals([previousChar, currentChar, nextChar], shortSequence) ||
+      ListEquality()
+          .equals([nextChar, currentChar, previousChar], shortSequence);
+}
+
+bool isOnSlashDiag(List<List<String>> lines, int x, int y) {
+  String previousChar = getChar(lines, x - 1, y + 1);
+  String nextChar = getChar(lines, x + 1, y - 1);
+  final currentChar = getChar(lines, x, y);
+
+  return ListEquality()
+          .equals([previousChar, currentChar, nextChar], shortSequence) ||
+      ListEquality()
+          .equals([nextChar, currentChar, previousChar], shortSequence);
 }

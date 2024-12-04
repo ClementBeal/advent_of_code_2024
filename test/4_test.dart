@@ -19,10 +19,26 @@ MAMMMXMMMM
 MXMXAXMASX""";
 
       expect(
-          countXMAS(input.split("\n").map((line) => line.split("")).toList()),
-          18);
+        countXMAS(input.split("\n").map((line) => line.split("")).toList()),
+        18,
+      );
+
+      expect(
+        countXMAS2(input.split("\n").map((line) => line.split("")).toList()),
+        9,
+      );
     },
   );
+
+  test("part 2 easy", () {
+    final input = """
+MAS
+MAX
+MXS""";
+
+    expect(countXMAS2(input.split("\n").map((line) => line.split("")).toList()),
+        1);
+  });
 
   group(
     "Sequence checker",
