@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 
 const sequence = ["X", "M", "A", "S"];
 const shortSequence = ["M", "A", "S"];
+const eq = ListEquality();
 
 void main(List<String> args) {
   final input = File(r"inputs/4.txt")
@@ -55,12 +56,6 @@ int countXMAS2(List<List<String>> lines) {
   return total;
 }
 
-bool isNextInSequence(String original, String next) {
-  const sequence = ["X", "M", "A", "S"];
-
-  return (sequence.indexOf(original) + 1 == sequence.indexOf(next));
-}
-
 String getChar(List<List<String>> lines, int x, int y) {
   int xLength = lines[0].length;
   int yLength = lines.length;
@@ -79,7 +74,7 @@ bool hasTopDown(List<List<String>> lines, int x, int y) {
     for (int i = 0; i < 4; i++) getChar(lines, x, y + i - pos)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasDownTop(List<List<String>> lines, int x, int y) {
@@ -89,7 +84,7 @@ bool hasDownTop(List<List<String>> lines, int x, int y) {
     for (int i = y + pos; i > y - (4 - pos); i--) getChar(lines, x, i)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasLeftRight(List<List<String>> lines, int x, int y) {
@@ -100,7 +95,7 @@ bool hasLeftRight(List<List<String>> lines, int x, int y) {
     for (int i = 0; i < 4; i++) getChar(lines, x + i - pos, y)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasRightLeft(List<List<String>> lines, int x, int y) {
@@ -111,7 +106,7 @@ bool hasRightLeft(List<List<String>> lines, int x, int y) {
     for (int i = x + pos; i > x - (4 - pos); i--) getChar(lines, i, y)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasDiagonalTopLeftBottomRight(List<List<String>> lines, int x, int y) {
@@ -122,7 +117,7 @@ bool hasDiagonalTopLeftBottomRight(List<List<String>> lines, int x, int y) {
     for (int i = 0 - pos; i < 4 - pos; i++) getChar(lines, x + i, y + i)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasDiagonalTopRightBottomLeft(List<List<String>> lines, int x, int y) {
@@ -133,7 +128,7 @@ bool hasDiagonalTopRightBottomLeft(List<List<String>> lines, int x, int y) {
     for (int i = 0 - pos; i < 4 - pos; i++) getChar(lines, x - i, y + i)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasDiagonalBottomLeftTopRight(List<List<String>> lines, int x, int y) {
@@ -144,7 +139,7 @@ bool hasDiagonalBottomLeftTopRight(List<List<String>> lines, int x, int y) {
     for (int i = 0 - pos; i < 4 - pos; i++) getChar(lines, x + i, y - i)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool hasDiagonalBottomRightTopLeft(List<List<String>> lines, int x, int y) {
@@ -155,7 +150,7 @@ bool hasDiagonalBottomRightTopLeft(List<List<String>> lines, int x, int y) {
     for (int i = 0 - pos; i < 4 - pos; i++) getChar(lines, x - i, y - i)
   ];
 
-  return ListEquality().equals(getSequence, sequence);
+  return eq.equals(getSequence, sequence);
 }
 
 bool isOnBackslashDiag(List<List<String>> lines, int x, int y) {
@@ -163,10 +158,8 @@ bool isOnBackslashDiag(List<List<String>> lines, int x, int y) {
   String nextChar = getChar(lines, x + 1, y + 1);
   final currentChar = getChar(lines, x, y);
 
-  return ListEquality()
-          .equals([previousChar, currentChar, nextChar], shortSequence) ||
-      ListEquality()
-          .equals([nextChar, currentChar, previousChar], shortSequence);
+  return eq.equals([previousChar, currentChar, nextChar], shortSequence) ||
+      eq.equals([nextChar, currentChar, previousChar], shortSequence);
 }
 
 bool isOnSlashDiag(List<List<String>> lines, int x, int y) {
@@ -174,8 +167,6 @@ bool isOnSlashDiag(List<List<String>> lines, int x, int y) {
   String nextChar = getChar(lines, x + 1, y - 1);
   final currentChar = getChar(lines, x, y);
 
-  return ListEquality()
-          .equals([previousChar, currentChar, nextChar], shortSequence) ||
-      ListEquality()
-          .equals([nextChar, currentChar, previousChar], shortSequence);
+  return eq.equals([previousChar, currentChar, nextChar], shortSequence) ||
+      eq.equals([nextChar, currentChar, previousChar], shortSequence);
 }
