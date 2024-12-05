@@ -34,6 +34,12 @@ void main() {
 97,13,75,29,47""";
 
   test("day 5 part 1", () {
-    expect(parseRules(testInput.split("\n")), 143);
+    final rules = parseRules(testInput.split("\n"));
+    expect(checkCorrectPages(rules), 143);
+  });
+
+  test("day 5 part 2", () {
+    final rules = parseRules(testInput.split("\n"));
+    expect(checkInCorrectPages(rules), 123);
   });
 }
