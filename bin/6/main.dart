@@ -4,6 +4,10 @@ void main(List<String> args) {
   final input = File(r"inputs/6.txt").readAsLinesSync();
 
   print(simulateGuardMovement(input.map((line) => line.split("")).toList()));
+
+  final input2 = File(r"inputs/6.txt").readAsLinesSync();
+  print(simulateGuardMovementWithObstruction(
+      input2.map((line) => line.split("")).toList()));
 }
 
 typedef Position = ({int x, int y});
@@ -17,8 +21,6 @@ int simulateGuardMovement(RoomMap map) {
   Set<Position> cache = {guardPosition};
 
   while (isInside(map, guardPosition)) {
-    // print(map.map((line) => line.join()).join("\n"));
-    // print("------------------------------");
     guardPosition = move(map, guardPosition);
 
     if (isInside(map, guardPosition)) {
@@ -27,6 +29,61 @@ int simulateGuardMovement(RoomMap map) {
   }
 
   return cache.length;
+}
+
+int simulateGuardMovementWithObstruction(RoomMap map) {
+  final initialPosition = findGuard(map);
+  final initialDirection = findFacingDirection(
+    getCellValue(map, initialPosition.x, initialPosition.y)!,
+  );
+
+  int total = 0;
+
+  for (int x = 0; x < map.length; x++) {
+    for (int y = 0; y < map[0].length; y++) {
+      final cell = getCellValue(map, x, y);
+      // print("$x $y");
+
+      // we only want an empty cell
+      if (cell != "." || (x: x, y: y) == initialPosition) continue;
+
+      final copyMap = map.map((row) => List<String>.from(row)).toList();
+
+      copyMap[x][y] = "O";
+
+      Position guardPosition = (x: initialPosition.x, y: initialPosition.y);
+      Direction direction = initialDirection;
+
+      final history = <Position, List<Direction>>{
+        guardPosition: [direction]
+      };
+
+      while (isInside(copyMap, guardPosition)) {
+        guardPosition = move(copyMap, guardPosition);
+        final newValue =
+            getCellValue(copyMap, guardPosition.x, guardPosition.y);
+
+        if (newValue != null) {
+          direction = findFacingDirection(newValue);
+        } else {
+          break;
+        }
+
+        if (history[guardPosition]?.contains(direction) ?? false) {
+          total += 1;
+          break;
+        } else {
+          history.update(
+            guardPosition,
+            (value) => [...value, direction],
+            ifAbsent: () => [direction],
+          );
+        }
+      }
+    }
+  }
+
+  return total;
 }
 
 Position findGuard(RoomMap map) {
@@ -80,7 +137,8 @@ Position move(RoomMap map, Position currentPosition) {
       getCellValue(map, currentPosition.x, currentPosition.y + 1),
   };
 
-  if (facingCellValue == "#") {
+  // we rotat eby 90 deg clockwise
+  if (facingCellValue == "#" || facingCellValue == "O") {
     map[currentPosition.y][currentPosition.x] = switch (direction) {
       Direction.east => "v",
       Direction.west => "^",
