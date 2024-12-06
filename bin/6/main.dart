@@ -1,173 +1,155 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 void main(List<String> args) {
-  // final input = File(r"inputs/6.txt").readAsLinesSync();
+  final input = File(r"inputs/6.txt").readAsLinesSync();
 
-  // print(simulateGuardMovement(input.map((line) => line.split("")).toList()));
-
-  final input2 = File(r"inputs/6.txt").readAsLinesSync();
-  print(simulateGuardMovementWithObstruction(
-      input2.map((line) => line.split("")).toList()));
+  print(simulateGuardMovement(input.map((line) => line.split("")).toList()));
 }
 
+typedef Dimension = ({int x, int y});
 typedef Position = ({int x, int y});
 typedef RoomMap = List<List<String>>;
 
 enum Direction { east, west, north, south }
 
-int simulateGuardMovement(RoomMap map) {
-  Position guardPosition = findGuard(map);
+int simulateGuardMovement(RoomMap roomMap) {
+  final Dimension dimension = (x: roomMap[0].length, y: roomMap.length);
+  final map = convertToMap(roomMap);
 
-  Set<Position> cache = {guardPosition};
+  Dimension guardPosition = findGuard(map, dimension);
 
-  while (isInside(map, guardPosition)) {
-    guardPosition = move(map, guardPosition);
+  Set<Dimension> cache = {guardPosition};
 
-    if (isInside(map, guardPosition)) {
+  while (isInside(dimension, guardPosition)) {
+    guardPosition = move(map, dimension, guardPosition);
+
+    if (isInside(dimension, guardPosition)) {
       cache.add(guardPosition);
     }
+
+    print(guardPosition);
   }
 
   return cache.length;
 }
 
-Set<Position> simulateGuardMovementPos(RoomMap map) {
-  Position guardPosition = findGuard(map);
+Uint8List convertToMap(RoomMap map) {
+  final list = Uint8List(map.length * map[0].length);
 
-  Set<Position> cache = {guardPosition};
+  final xLength = map[0].length;
+  final yLength = map.length;
 
-  while (isInside(map, guardPosition)) {
-    guardPosition = move(map, guardPosition);
-
-    if (isInside(map, guardPosition)) {
-      cache.add(guardPosition);
-    }
-  }
-
-  return cache;
-}
-
-int simulateGuardMovementWithObstruction(RoomMap map) {
-  final initialPosition = findGuard(map);
-  final initialDirection = findFacingDirection(
-    getCellValue(map, initialPosition.x, initialPosition.y)!,
-  );
-
-  final allPositions = simulateGuardMovementPos(
-      map.map((row) => List<String>.from(row)).toList());
-
-  int total = 0;
-
-  for (final (:x, :y) in allPositions) {
-    final copyMap = map.map((row) => List<String>.from(row)).toList();
-
-    copyMap[y][x] = "O";
-
-    Position guardPosition = initialPosition;
-    Direction direction = initialDirection;
-
-    final history = <Position, Set<Direction>>{
-      guardPosition: {direction}
-    };
-
-    while (isInside(copyMap, guardPosition)) {
-      guardPosition = move(copyMap, guardPosition);
-      final newValue = getCellValue(copyMap, guardPosition.x, guardPosition.y);
-
-      if (newValue != null) {
-        direction = findFacingDirection(newValue);
-      }
-
-      if (history[guardPosition]?.contains(direction) ?? false) {
-        total += 1;
-        break;
-      } else {
-        history.update(
-          guardPosition,
-          (value) => {...value, direction},
-          ifAbsent: () => {direction},
-        );
-      }
-    }
-  }
-
-  return total;
-}
-
-Position findGuard(RoomMap map) {
-  for (int x = 0; x < map[0].length; x++) {
-    for (int y = 0; y < map.length; y++) {
+  for (int x = 0; x < xLength; x++) {
+    for (int y = 0; y < yLength; y++) {
       final cellValue = map[y][x];
+      final id = x + xLength * y;
 
-      if ([">", "<", "^", "v"].contains(cellValue)) return (x: x, y: y);
+      switch (cellValue) {
+        case ">":
+          list[id] = 0;
+          break;
+        case "<":
+          list[id] = 1;
+          break;
+        case "^":
+          list[id] = 2;
+          break;
+        case "v":
+          list[id] = 3;
+          break;
+        case ".":
+          list[id] = 4;
+          break;
+        case "#":
+          list[id] = 5;
+          break;
+      }
     }
   }
 
-  return (x: -1, y: -1);
+  return list;
 }
 
-bool isInside(RoomMap map, Position currentPosition) {
-  return currentPosition.x >= 0 &&
-      currentPosition.x < map[0].length &&
-      currentPosition.y >= 0 &&
-      currentPosition.y < map.length;
+Position findGuard(Uint8List map, Dimension dimension) {
+  for (var i = 0; i < map.length; i++) {
+    if (map[i] < 4) return (x: i % dimension.x, y: i ~/ dimension.x);
+  }
+
+  throw Exception("No guard");
 }
 
-Direction findFacingDirection(String cellValue) {
-  return switch (cellValue) {
-    ">" => Direction.east,
-    "<" => Direction.west,
-    "v" => Direction.south,
-    "^" => Direction.north,
-    _ => Direction.east
+bool isInside(Dimension dimension, Position position) {
+  return 0 <= position.x &&
+      position.x < dimension.x &&
+      0 <= position.y &&
+      position.y < dimension.y;
+}
+
+int? getCellValue(Uint8List map, Dimension dimension, Position position) {
+  if (!isInside(dimension, position)) return null;
+
+  return map[position.x + position.y * dimension.x];
+}
+
+void setCellValue(
+    Uint8List map, Dimension dimension, Position position, int value) {
+  if (!isInside(dimension, position)) return;
+
+  map[position.x + position.y * dimension.x] = value;
+}
+
+Position move(Uint8List map, Dimension dimension, Position position) {
+  final currentValue = getCellValue(map, dimension, position);
+  final currentDirection = switch (currentValue) {
+    0 => Direction.east,
+    1 => Direction.west,
+    2 => Direction.north,
+    3 => Direction.south,
+    _ => Direction.east,
   };
-}
 
-String? getCellValue(RoomMap map, int x, int y) {
-  if (x < 0 || x >= map[0].length) return null;
-  if (y < 0 || y >= map.length) return null;
-
-  return map[y][x];
-}
-
-Position move(RoomMap map, Position currentPosition) {
-  final cellValue = map[currentPosition.y][currentPosition.x];
-  final direction = findFacingDirection(cellValue);
-
-  final facingCellValue = switch (direction) {
-    Direction.east =>
-      getCellValue(map, currentPosition.x + 1, currentPosition.y),
-    Direction.west =>
-      getCellValue(map, currentPosition.x - 1, currentPosition.y),
-    Direction.north =>
-      getCellValue(map, currentPosition.x, currentPosition.y - 1),
-    Direction.south =>
-      getCellValue(map, currentPosition.x, currentPosition.y + 1),
+  final facingCellPosition = switch (currentDirection) {
+    Direction.east => (x: position.x + 1, y: position.y),
+    Direction.west => (x: position.x - 1, y: position.y),
+    Direction.north => (x: position.x, y: position.y - 1),
+    Direction.south => (x: position.x, y: position.y + 1),
   };
 
-  // we rotat eby 90 deg clockwise
-  if (facingCellValue == "#" || facingCellValue == "O") {
-    map[currentPosition.y][currentPosition.x] = switch (direction) {
-      Direction.east => "v",
-      Direction.west => "^",
-      Direction.north => ">",
-      Direction.south => "<",
-    };
+  final facingCellValue = getCellValue(map, dimension, facingCellPosition);
 
-    return currentPosition;
+  if (facingCellValue == null) {
+    return facingCellPosition;
   } else {
-    map[currentPosition.y][currentPosition.x] = ".";
-    final newPosition = switch (direction) {
-      Direction.east => (x: currentPosition.x + 1, y: currentPosition.y),
-      Direction.west => (x: currentPosition.x - 1, y: currentPosition.y),
-      Direction.north => (x: currentPosition.x, y: currentPosition.y - 1),
-      Direction.south => (x: currentPosition.x, y: currentPosition.y + 1),
-    };
+    if (facingCellValue == 5) {
+      // we rotate
+      setCellValue(
+          map,
+          dimension,
+          position,
+          switch (currentDirection) {
+            Direction.east => 3,
+            Direction.west => 2,
+            Direction.north => 0,
+            Direction.south => 1,
+          });
+      return position;
+    } else {
+      setCellValue(
+        map,
+        dimension,
+        facingCellPosition,
+        currentValue!,
+      );
 
-    if (isInside(map, newPosition)) {
-      map[newPosition.y][newPosition.x] = cellValue;
+      setCellValue(
+        map,
+        dimension,
+        position,
+        4,
+      );
+
+      return facingCellPosition;
     }
-
-    return newPosition;
   }
 }

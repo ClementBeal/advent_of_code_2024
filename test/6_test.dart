@@ -27,16 +27,17 @@ void main() {
 
     expect(totalMove, 41);
   });
-  test("day 6 part 2", () {
-    final input = testInput
-        .split("\n")
-        .map(
-          (line) => line.split(""),
-        )
-        .toList();
 
-    final totalMove = simulateGuardMovementWithObstruction(input);
+  // test("day 6 part 2", () {
+  //   final input = testInput
+  //       .split("\n")
+  //       .map(
+  //         (line) => line.split(""),
+  //       )
+  //       .toList();
 
-    expect(totalMove, 6);
-  });
+  //   final totalMove = simulateGuardMovementWithObstruction(input);
+
+  //   expect(totalMove, 6);
+  // });
 }
