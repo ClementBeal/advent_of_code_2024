@@ -1,9 +1,9 @@
 import 'dart:io';
 
 void main(List<String> args) {
-  final input = File(r"inputs/6.txt").readAsLinesSync();
+  // final input = File(r"inputs/6.txt").readAsLinesSync();
 
-  print(simulateGuardMovement(input.map((line) => line.split("")).toList()));
+  // print(simulateGuardMovement(input.map((line) => line.split("")).toList()));
 
   final input2 = File(r"inputs/6.txt").readAsLinesSync();
   print(simulateGuardMovementWithObstruction(
@@ -31,54 +31,62 @@ int simulateGuardMovement(RoomMap map) {
   return cache.length;
 }
 
+Set<Position> simulateGuardMovementPos(RoomMap map) {
+  Position guardPosition = findGuard(map);
+
+  Set<Position> cache = {guardPosition};
+
+  while (isInside(map, guardPosition)) {
+    guardPosition = move(map, guardPosition);
+
+    if (isInside(map, guardPosition)) {
+      cache.add(guardPosition);
+    }
+  }
+
+  return cache;
+}
+
 int simulateGuardMovementWithObstruction(RoomMap map) {
   final initialPosition = findGuard(map);
   final initialDirection = findFacingDirection(
     getCellValue(map, initialPosition.x, initialPosition.y)!,
   );
 
+  final allPositions = simulateGuardMovementPos(
+      map.map((row) => List<String>.from(row)).toList());
+
   int total = 0;
 
-  for (int x = 0; x < map.length; x++) {
-    for (int y = 0; y < map[0].length; y++) {
-      final cell = getCellValue(map, x, y);
-      // print("$x $y");
+  for (final (:x, :y) in allPositions) {
+    final copyMap = map.map((row) => List<String>.from(row)).toList();
 
-      // we only want an empty cell
-      if (cell != "." || (x: x, y: y) == initialPosition) continue;
+    copyMap[y][x] = "O";
 
-      final copyMap = map.map((row) => List<String>.from(row)).toList();
+    Position guardPosition = initialPosition;
+    Direction direction = initialDirection;
 
-      copyMap[x][y] = "O";
+    final history = <Position, Set<Direction>>{
+      guardPosition: {direction}
+    };
 
-      Position guardPosition = (x: initialPosition.x, y: initialPosition.y);
-      Direction direction = initialDirection;
+    while (isInside(copyMap, guardPosition)) {
+      guardPosition = move(copyMap, guardPosition);
+      final newValue = getCellValue(copyMap, guardPosition.x, guardPosition.y);
 
-      final history = <Position, List<Direction>>{
-        guardPosition: [direction]
-      };
+      if (newValue != null) {
+        direction = findFacingDirection(newValue);
+      }
 
-      while (isInside(copyMap, guardPosition)) {
-        guardPosition = move(copyMap, guardPosition);
-        final newValue =
-            getCellValue(copyMap, guardPosition.x, guardPosition.y);
-
-        if (newValue != null) {
-          direction = findFacingDirection(newValue);
-        } else {
-          break;
-        }
-
-        if (history[guardPosition]?.contains(direction) ?? false) {
-          total += 1;
-          break;
-        } else {
-          history.update(
-            guardPosition,
-            (value) => [...value, direction],
-            ifAbsent: () => [direction],
-          );
-        }
+      if (history[guardPosition]?.contains(direction) ?? false) {
+        total += 1;
+        break;
+      } else {
+        history.update(
+          guardPosition,
+          (value) => {...value, direction},
+          ifAbsent: () => {direction},
+        );
       }
     }
   }
