@@ -27,8 +27,6 @@ int simulateGuardMovement(RoomMap roomMap) {
     if (isInside(dimension, guardPosition)) {
       cache.add(guardPosition);
     }
-
-    print(guardPosition);
   }
 
   return cache.length;
