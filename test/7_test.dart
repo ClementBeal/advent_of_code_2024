@@ -22,4 +22,12 @@ void main() {
 
     expect(totalMove, 3749);
   });
+
+  test("day 7 part 2", () {
+    final input = testInput.split("\n").toList();
+
+    final totalMove = findCorrectEquationsWithConcatenations(input);
+
+    expect(totalMove, 11387);
+  });
 }
