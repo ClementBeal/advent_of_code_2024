@@ -73,7 +73,9 @@ int findCorrectEquationsWithConcatenations(List<String> lines) {
         equationResult = switch (operator) {
           0 => equationResult + coeffiecents[index + 1],
           1 => equationResult * coeffiecents[index + 1],
-          2 => int.parse("$equationResult${coeffiecents[index + 1]}"),
+          2 => equationResult *
+                  pow(10, coeffiecents[index + 1].toString().length).toInt() +
+              coeffiecents[index + 1],
           _ => throw Exception(),
         };
       }
@@ -90,7 +92,7 @@ int findCorrectEquationsWithConcatenations(List<String> lines) {
   return total;
 }
 
-void incrementUint8List(Uint8List list, [int limitCharacter = 1]) {
+void incrementUint8List(List<int> list, [int limitCharacter = 1]) {
   int reminder = 0;
   int i = 0;
 
