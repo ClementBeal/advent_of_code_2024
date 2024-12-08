@@ -1,95 +1,111 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
-void main(List<String> args) {
+import 'package:collection/collection.dart';
+
+Future<void> main(List<String> args) async {
   final input = File(r"inputs/7.txt").readAsLinesSync();
 
-  print(findCorrectEquations(input));
-  print(findCorrectEquationsWithConcatenations(input));
+  print(await findCorrectEquations(input));
+  print(await findCorrectEquationsWithConcatenations(input));
 }
 
-int findCorrectEquations(List<String> lines) {
+Future<int> findCorrectEquations(List<String> lines) async {
   int total = 0;
 
-  for (var line in lines) {
-    final tokens = line.split(":");
+  final jobsPerCore = lines.length ~/ Platform.numberOfProcessors;
 
-    final expectedResult = int.parse(tokens[0]);
-    final coeffiecents = tokens[1]
-        .split(" ")
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .map(int.parse)
-        .toList();
+  return (await [
+    for (final lines in lines.slices(jobsPerCore + 1))
+      Isolate.run(() {
+        for (var line in lines) {
+          final tokens = line.split(":");
 
-    final operators = Uint8List(coeffiecents.length - 1);
+          final expectedResult = int.parse(tokens[0]);
+          final coeffiecents = tokens[1]
+              .split(" ")
+              .map((t) => t.trim())
+              .where((t) => t.isNotEmpty)
+              .map(int.parse)
+              .toList();
 
-    int possibleCombination = pow(2, operators.length).toInt();
+          final operators = Uint8List(coeffiecents.length - 1);
 
-    for (var i = 0; i < possibleCombination; i++) {
-      int equationResult = coeffiecents[0];
+          int possibleCombination = pow(2, operators.length).toInt();
 
-      for (var (index, operator) in operators.indexed) {
-        equationResult = (operator == 0)
-            ? equationResult + coeffiecents[index + 1]
-            : equationResult * coeffiecents[index + 1];
-      }
+          for (var i = 0; i < possibleCombination; i++) {
+            int equationResult = coeffiecents[0];
 
-      if (equationResult == expectedResult) {
-        total += expectedResult;
-        break;
-      }
+            for (var (index, operator) in operators.indexed) {
+              equationResult = (operator == 0)
+                  ? equationResult + coeffiecents[index + 1]
+                  : equationResult * coeffiecents[index + 1];
+            }
 
-      incrementUint8List(operators);
-    }
-  }
+            if (equationResult == expectedResult) {
+              total += expectedResult;
+              break;
+            }
 
-  return total;
+            incrementUint8List(operators);
+          }
+        }
+
+        return total;
+      })
+  ].wait)
+      .sum;
 }
 
-int findCorrectEquationsWithConcatenations(List<String> lines) {
+Future<int> findCorrectEquationsWithConcatenations(List<String> lines) async {
   int total = 0;
 
-  for (var line in lines) {
-    final tokens = line.split(":");
+  final jobsPerCore = lines.length ~/ Platform.numberOfProcessors;
 
-    final expectedResult = int.parse(tokens[0]);
-    final coeffiecents = tokens[1]
-        .split(" ")
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .map(int.parse)
-        .toList();
+  return (await [
+    for (final lines in lines.slices(jobsPerCore + 1))
+      Isolate.run(() {
+        for (var line in lines) {
+          final tokens = line.split(":");
 
-    final operators = Uint8List(coeffiecents.length - 1);
+          final expectedResult = int.parse(tokens[0]);
+          final coeffiecents =
+              tokens[1].split(" ").skip(1).map(int.parse).toList();
 
-    int possibleCombination = pow(3, operators.length).toInt();
+          final operators = Uint8List(coeffiecents.length - 1);
 
-    for (var i = 0; i < possibleCombination; i++) {
-      int equationResult = coeffiecents[0];
+          int possibleCombination = pow(3, operators.length).toInt();
 
-      for (var (index, operator) in operators.indexed) {
-        equationResult = switch (operator) {
-          0 => equationResult + coeffiecents[index + 1],
-          1 => equationResult * coeffiecents[index + 1],
-          2 => equationResult *
-                  pow(10, coeffiecents[index + 1].toString().length).toInt() +
-              coeffiecents[index + 1],
-          _ => throw Exception(),
-        };
-      }
+          for (var i = 0; i < possibleCombination; i++) {
+            int equationResult = coeffiecents[0];
 
-      if (equationResult == expectedResult) {
-        total += expectedResult;
-        break;
-      }
+            for (var (index, operator) in operators.indexed) {
+              equationResult = switch (operator) {
+                0 => equationResult + coeffiecents[index + 1],
+                1 => equationResult * coeffiecents[index + 1],
+                2 => equationResult *
+                        pow(10, coeffiecents[index + 1].toString().length)
+                            .toInt() +
+                    coeffiecents[index + 1],
+                _ => throw Exception(),
+              };
+            }
 
-      incrementUint8List(operators, 2);
-    }
-  }
+            if (equationResult == expectedResult) {
+              total += expectedResult;
+              break;
+            }
 
-  return total;
+            incrementUint8List(operators, 2);
+          }
+        }
+
+        return total;
+      })
+  ].wait)
+      .sum;
 }
 
 void incrementUint8List(List<int> list, [int limitCharacter = 1]) {
