@@ -15,18 +15,18 @@ void main() {
 21037: 9 7 18 13
 292: 11 6 16 20""";
 
-  test("day 7 part 1", () {
+  test("day 7 part 1", () async {
     final input = testInput.split("\n").toList();
 
-    final totalMove = findCorrectEquations(input);
+    final totalMove = await findCorrectEquations(input);
 
     expect(totalMove, 3749);
   });
 
-  test("day 7 part 2", () {
+  test("day 7 part 2", () async {
     final input = testInput.split("\n").toList();
 
-    final totalMove = findCorrectEquationsWithConcatenations(input);
+    final totalMove = await findCorrectEquationsWithConcatenations(input);
 
     expect(totalMove, 11387);
   });
